@@ -78,19 +78,31 @@ process.on('message', msg => {
   log.verbose('unknown hook message:', msg);
 });
 
-process.on('uncaughtException', err => {
-  const name = 'name' in electron.app ? electron.app.name :
-    'getName' in electron.app ? electron.app.getName() :
-      'the application';
+/**
+ * HACK: Temporary disable
+ *
+ * The thing in `onHandled` below will cause the consumer of electronmon not able to prevent the app from crashing.
+ * (ie., consumers attach uncaughtException handler in their code, but the app still crashes anyway)
+ *
+ * So if consumers install Sentry in their project, and they enabled Sentry's OnUncaughtException integration,
+ * since Electronmon has been attached uncaughtException handler first, the app will just crash and might prevent
+ * (in my case, it's always preventing) Sentry to report exception to remote server.
+ *
+ * Simply put, exception handling is consumer's responsibility, not Electronmon's.
+ */
+// process.on('uncaughtException', err => {
+//   const name = 'name' in electron.app ? electron.app.name :
+//     'getName' in electron.app ? electron.app.getName() :
+//       'the application';
 
-  const onHandled = () => {
-    electron.dialog.showErrorBox(`${name} encountered an error`, err.stack);
-    exit(1);
-  };
+//   const onHandled = () => {
+//     electron.dialog.showErrorBox(`${name} encountered an error`, err.stack);
+//     exit(1);
+//   };
 
-  if (process.send) {
-    queue({ type: 'uncaught-exception' }, () => onHandled());
-  } else {
-    onHandled();
-  }
-});
+//   if (process.send) {
+//     queue({ type: 'uncaught-exception' }, () => onHandled());
+//   } else {
+//     onHandled();
+//   }
+// });
